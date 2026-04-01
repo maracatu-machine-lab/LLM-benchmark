@@ -5,13 +5,13 @@ import matplotlib.pyplot as plt
 from colorama import Fore
 from natsort import natsorted
 from openai import OpenAI
-import json
+from Rodar_Judge import rodar_judge
 
-models = ["qwen2.5:3B-Q4_K_M"]
+models = ["llama3.2:1B-F16"]
 all_models = models
 
 TEMPERATURA = 0.7
-NUMERO_ITERACOES = 2
+NUMERO_ITERACOES = 1
 
 
 class Pergunta():
@@ -76,76 +76,6 @@ def fazer_perguntas(array_perguntas, texto_titulo_pergunta, complemento_pergunta
         resposta_ajustada_arr.append("")
         idioma_resposta_arr.append("")
         avaliacao_arr.append("")
-
-class LLMJudge:
-   
-   def __init__(self, client, judge_model):
-      self.client = client
-      self.judge_model = judge_model
-
-   def judge(self, question, correct_answer, intuitive_answer, model_answer):
-      
-        prompt = f"""
-        você é um avaliador de respostas de modelos de linguagem.
-        pergunta: {question} 
-        resposta correta: {correct_answer}
-        resposta intuitiva: {intuitive_answer}
-        resposta do modelo: {model_answer}
-
-        suas tarefas:
-        1 - extrair APENAS a resposta final dada pelo modelo
-        2 - classifique como:
-        - correta
-        - intuitiva
-        - outro
-        - nao_respondida
-        
-        Responda somente em JSON:
-        
-        {{
-            "final_answer": "...",
-            "classification": "..."
-        }}
-        """
-        response = self.client.chat.completions.create(
-           model = self.judge_model,
-           messages = [{"role" : "user", "content": prompt}],
-           temperature = 0
-        )
-
-        content = response.choices[0].message.content
-
-        try:
-           resultado = json.loads(content)
-        except:
-           resultado = {"final_answer": "-",
-                        "classification": "outro"}
-        return resultado
-
-def rodar_judge():
-   
-   client = OpenAI(
-      base_url = "http://localhost:12434/v1",
-      api_key = "local"
-   )
-
-   judge = LLMJudge(client, "llama3.2:1B-F16")
-
-   data = pd.read_csv("dados_qwen.csv", sep = ";")
-
-   for i, row in data.iterrows():
-      resultado = judge.judge(
-        question = row["pergunta"],
-        correct_answer = row["r_correta"],
-        intuitive_answer = row["r_intuitiva"],
-        model_answer = row["r_recebida"]
-      )
-      data.loc[i, "r_ajustada"] = resultado["final_answer"]
-      data.loc[i, "avaliacao"] = resultado["classification"]
-
-   data.to_csv("dados_qwen_avaliados.csv", sep = ";", index = False)
-
-
 
 
 originais_ingles = [
@@ -305,34 +235,38 @@ novas_ex_portugues = [
 ]
 
 fazer_perguntas(originais_ingles, "Pergunta original - Inglês", " Give only your final answer.", "ORIG_ING_")
-
 fazer_perguntas(originais_portugues, "Pergunta original - Português", " Dê apenas sua resposta final.", "ORIG_POR_")
-
 fazer_perguntas(originais_ex_ingles, "Pergunta original com exemplo - Inglês", " Give only your final answer.", "ORIG_EX_ING_")
-
 fazer_perguntas(originais_ex_portugues, "Pergunta original com exemplo - Português", " Dê apenas sua resposta final.", "ORIG_EX_POR_")
-
 fazer_perguntas(novas_ingles, "Pergunta nova - Inglês", " Give only your final answer.", "NOVA_ING_")
-
 fazer_perguntas(novas_portugues, "Pergunta nova - Português", " Dê apenas sua resposta final.", "NOVA_POR_")
-
 fazer_perguntas(novas_ex_ingles, "Pergunta nova com exemplo - Inglês", " Give only your final answer.", "NOVA_EX_ING_")
-
 fazer_perguntas(novas_ex_portugues, "Pergunta nova com exemplo - Português", " Dê apenas sua resposta final.", "NOVA_EX_POR_")
 
 
 # -------------
 # CRIAÇÃO DO ARQUIVO CSV
+df = pd.DataFrame({
+    "pergunta": pergunta_arr,
+    "origem": origem_arr,
+    "modelo": modelo_arr,
+    "r_correta": resposta_correta_arr,
+    "r_intuitiva": resposta_intuitiva_arr,
+    "r_recebida": resposta_recebida_arr,
+    "r_ajustada": resposta_ajustada_arr,
+    "idioma": idioma_resposta_arr,
+    "avaliacao": avaliacao_arr
+})
 
-np.savetxt('dados_qwen.csv', np.c_[pergunta_arr, origem_arr, modelo_arr, resposta_correta_arr, resposta_intuitiva_arr, resposta_recebida_arr, resposta_ajustada_arr, idioma_resposta_arr, avaliacao_arr], delimiter=';', fmt=['%s','%s','%s','%s','%s','%s','%s','%s','%s'])
-
+df.to_csv("dados_qwen.csv", sep=";", index=False, encoding="utf-8")
+rodar_judge()
 # -------------
 # AVALIAÇÃO A SER FEITA APÓS O TRATAMENTO DAS RESPOSTAS
 # !!! OS ARQUIVOS TRATADOS DEVEM TER '_ajustados' no fim do nome para o código a seguir funcionar sem modificações
-rodar_judge()
 
 data = pd.read_csv('dados_qwen_ajustados.csv', sep=";", keep_default_na=False)
 data['avaliacao'] = np.where(data['r_ajustada'] == data['r_correta'], 'correta', np.where(data['r_ajustada'] == data['r_intuitiva'], 'intuitiva', np.where(data['r_ajustada'] == '-', 'nao_respondida', 'outro')))
+
 data.to_csv('dados_qwen_avaliados.csv',index=False, sep=";")
 
 # -------------
@@ -342,7 +276,6 @@ resultado = []
 
 df = pd.read_csv('dados_qwen_avaliados.csv', sep=";", keep_default_na=False)
 resultado.append(df)
-
 frame = pd.concat(resultado, axis=0, ignore_index=True)
 frame.to_csv('dados_tcc_todos_avaliados.csv', index=False, sep=";")
 
