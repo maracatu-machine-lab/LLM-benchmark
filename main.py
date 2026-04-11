@@ -1,9 +1,7 @@
-import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from colorama import Fore
-from natsort import natsorted
 from openai import OpenAI
 from perguntas import configuracoes_perguntas
 
@@ -12,14 +10,6 @@ all_models = models
 
 TEMPERATURA = 0.7
 NUMERO_ITERACOES = 10
-
-
-class Pergunta():
-  def __init__(self, pergunta, resposta_correta, resposta_intuitiva, origem):
-    self.pergunta = pergunta
-    self.resposta_correta = resposta_correta
-    self.resposta_intuitiva = resposta_intuitiva
-    self.origem = origem
 
 pergunta_arr = ['pergunta']
 origem_arr = ['origem']
