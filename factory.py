@@ -1,4 +1,5 @@
 from hf_llm import HuggingFaceLLM
+from propriedades_configuracao import settings
 
 MODELOS_DISPONIVEIS = {
     "medgemma": "unsloth/medgemma-4b-it",
@@ -11,6 +12,6 @@ def carregar_modelo(nome: str):
     if nome not in MODELOS_DISPONIVEIS:
         raise ValueError(f"Modelo '{nome}' não suportado")
 
-    hf_token = 'INSIRA-SEU-HF-TOKEN-AQUI'
+    hf_token = settings.hf_token
 
     return HuggingFaceLLM(MODELOS_DISPONIVEIS[nome], hf_token)

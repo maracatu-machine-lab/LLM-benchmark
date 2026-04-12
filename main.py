@@ -7,10 +7,11 @@ from factory import carregar_modelo
 from perguntas import configuracoes_perguntas
 from graficos import gerar_graficos
 from factory import MODELOS_DISPONIVEIS
+from propriedades_configuracao import settings
 
 MODELOS = list(MODELOS_DISPONIVEIS.keys())
 #MODELOS = ['medgemma']
-NUMERO_ITERACOES = 10
+NUMERO_ITERACOES = settings.numero_iteracoes
 
 pergunta_arr = ['pergunta']
 origem_arr = ['origem']
@@ -23,7 +24,7 @@ idioma_resposta_arr = ['idioma']
 avaliacao_arr = ['avaliacao']
 
 
-def obter_resposta_do_modelo(llm, prompt, timeout_in_seconds=500):
+def obter_resposta_do_modelo(llm, prompt, timeout_in_seconds=settings.timeout_in_seconds):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         future = executor.submit(llm.generate, prompt)
         try:
