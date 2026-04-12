@@ -1,14 +1,15 @@
 import numpy as np
 import pandas as pd
 from colorama import Fore
-from openai import OpenAI
+import concurrent.futures
+
+from factory import carregar_modelo
 from perguntas import configuracoes_perguntas
 from graficos import gerar_graficos
+from factory import MODELOS_DISPONIVEIS
 
-models = ["qwen3.5-4b"]
-all_models = models
-
-TEMPERATURA = 0.7
+MODELOS = list(MODELOS_DISPONIVEIS.keys())
+#MODELOS = ['medgemma']
 NUMERO_ITERACOES = 10
 
 pergunta_arr = ['pergunta']
@@ -21,15 +22,16 @@ resposta_ajustada_arr = ['r_ajustada']
 idioma_resposta_arr = ['idioma']
 avaliacao_arr = ['avaliacao']
 
-def fazer_perguntas(array_perguntas, texto_titulo_pergunta, complemento_pergunta, texto_id_pergunta):
-  
-  client = OpenAI(
-      base_url="http://localhost:1234/v1",
-      api_key="lm-studio"  # qualquer string funciona
-  )
 
-  used_models = models
- 
+def obter_resposta_do_modelo(llm, prompt, timeout_in_seconds=500):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        future = executor.submit(llm.generate, prompt)
+        try:
+            return future.result(timeout=timeout_in_seconds)
+        except concurrent.futures.TimeoutError:
+            return "TEMPO_LIMITE_EXCEDIDO"
+
+def fazer_perguntas(array_perguntas, texto_titulo_pergunta, complemento_pergunta, texto_id_pergunta, llm, nome_modelo):
   for indice_pergunta, pergunta in enumerate(array_perguntas):
     print("-------------------------------------")
     print("-------------------------------------")
@@ -37,68 +39,62 @@ def fazer_perguntas(array_perguntas, texto_titulo_pergunta, complemento_pergunta
     print(texto_titulo_pergunta)
     print(pergunta.pergunta)
 
-    messages = [
-        {"role": "user",
-        "content": (pergunta.pergunta + complemento_pergunta)}
-    ]
+    prompt = pergunta.pergunta + complemento_pergunta
 
-    for model in used_models:
-      for i in range(NUMERO_ITERACOES):
-        response = client.chat.completions.create(
-            model=model,
-            messages=messages,
-            temperature=TEMPERATURA,
-            #max_tokens=50 # Pode ser removido
-        )
+    for i in range(NUMERO_ITERACOES):
+      response = obter_resposta_do_modelo(llm, prompt)
+      response = str(response)
 
-        print("-------------------------------------")
-        print("Modelo: " + model + "       Resposta número: " + str(i+1))
-        print(Fore.GREEN + "Resposta correta: " + pergunta.resposta_correta)
-        print(Fore.RED + "Resposta intuitiva: " + pergunta.resposta_intuitiva)
-        print(Fore.BLACK + response.choices[0].message.content)
+      print("Modelo: " + nome_modelo + "       Resposta número: " + str(i+1))
+      print(Fore.GREEN + "Resposta correta: " + pergunta.resposta_correta)
+      print(Fore.RED + "Resposta intuitiva: " + pergunta.resposta_intuitiva)
+      print(Fore.BLACK + response)
 
-        pergunta_arr.append(texto_id_pergunta + str(indice_pergunta+1))
-        origem_arr.append(pergunta.origem)
-        modelo_arr.append(model)
-        resposta_correta_arr.append(pergunta.resposta_correta)
-        resposta_intuitiva_arr.append(pergunta.resposta_intuitiva)
-        resposta_recebida_arr.append((" ".join(response.choices[0].message.content.splitlines())).replace(";", ","))
-        resposta_ajustada_arr.append("")
-        idioma_resposta_arr.append("")
-        avaliacao_arr.append("")
+      pergunta_arr.append(texto_id_pergunta + str(indice_pergunta+1))
+      origem_arr.append(pergunta.origem)
+      modelo_arr.append(nome_modelo)
+      resposta_correta_arr.append(pergunta.resposta_correta)
+      resposta_intuitiva_arr.append(pergunta.resposta_intuitiva)
+      resposta_recebida_arr.append((" ".join(response.splitlines())).replace(";", ","))
+      resposta_ajustada_arr.append("")
+      idioma_resposta_arr.append("")
+    avaliacao_arr.append("")
 
 
 # -------------
 # FAZER PERGUNTAS
-for config in configuracoes_perguntas:
-    fazer_perguntas(
-        config["lista"],
-        config["titulo"],
-        config["complemento"],
-        config["id"]
-    )
-
+for nome_modelo in MODELOS:
+    llm = carregar_modelo(nome_modelo)
+    for config in configuracoes_perguntas:
+        fazer_perguntas(
+            config["lista"],
+            config["titulo"],
+            config["complemento"],
+            config["id"],
+            llm,
+            nome_modelo
+        )
 
 # -------------
 # CRIAÇÃO DO ARQUIVO CSV
 
-np.savetxt('dados_qwen.csv', np.c_[pergunta_arr, origem_arr, modelo_arr, resposta_correta_arr, resposta_intuitiva_arr, resposta_recebida_arr, resposta_ajustada_arr, idioma_resposta_arr, avaliacao_arr], delimiter=';', fmt=['%s','%s','%s','%s','%s','%s','%s','%s','%s'])
+np.savetxt('dados_medgemma.csv', np.c_[pergunta_arr, origem_arr, modelo_arr, resposta_correta_arr, resposta_intuitiva_arr, resposta_recebida_arr, resposta_ajustada_arr, idioma_resposta_arr, avaliacao_arr], delimiter=';', fmt=['%s','%s','%s','%s','%s','%s','%s','%s','%s'])
 
 # -------------
 # AVALIAÇÃO A SER FEITA APÓS O TRATAMENTO DAS RESPOSTAS
 # !!! OS ARQUIVOS TRATADOS DEVEM TER '_ajustados' no fim do nome para o código a seguir funcionar sem modificações
 
 
-data = pd.read_csv('dados_qwen_ajustados.csv', sep=";", keep_default_na=False)
+data = pd.read_csv('dados_medgemma_ajustados.csv', sep=";", keep_default_na=False)
 data['avaliacao'] = np.where(data['r_ajustada'] == data['r_correta'], 'correta', np.where(data['r_ajustada'] == data['r_intuitiva'], 'intuitiva', np.where(data['r_ajustada'] == '-', 'nao_respondida', 'outro')))
-data.to_csv('dados_qwen_avaliados.csv',index=False, sep=";")
+data.to_csv('dados_medgemma_avaliados.csv',index=False, sep=";")
 
 # -------------
 # JUNÇÃO DOS ARQUIVOS AVALIADOS DE TODAS AS LLMS
 
 resultado = []
 
-df = pd.read_csv('dados_qwen_avaliados.csv', sep=";", keep_default_na=False)
+df = pd.read_csv('dados_medgemma_avaliados.csv', sep=";", keep_default_na=False)
 resultado.append(df)
 
 frame = pd.concat(resultado, axis=0, ignore_index=True)
@@ -107,4 +103,4 @@ frame.to_csv('dados_tcc_todos_avaliados.csv', index=False, sep=";")
 
 # -------------
 # CRIAÇÃO DE GRÁFICOS
-gerar_graficos(all_models)
+gerar_graficos(MODELOS)

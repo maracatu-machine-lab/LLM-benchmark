@@ -1,4 +1,4 @@
-from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM, AutoModelForSeq2SeqLM, GenerationConfig
+from transformers import pipeline, AutoConfig, AutoModelForSeq2SeqLM, AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 import torch
 from interface_base import BaseLLM
 
@@ -7,19 +7,22 @@ class HuggingFaceLLM(BaseLLM):
     def __init__(self, model_name: str, hf_token: str = None):
         self.model_name = model_name
 
-        self.device = 0 if torch.cuda.is_available() else -1
-
+        config = AutoConfig.from_pretrained(model_name)
         # Detecta tipo do modelo automaticamente e usa do cache ou baixa os pesos
-        if "t5" in model_name.lower():
-            self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name, local_files_only=True)
+        if config.is_encoder_decoder:
+            self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+            task = "text2text-generation"
         else:
             # Pode acessar localmente como "./models/medgemma"
             self.model = AutoModelForCausalLM.from_pretrained(model_name)
+            task = "text-generation"
+
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_name, use_auth_token=hf_token)
-
+        self.device = 0 if torch.cuda.is_available() else -1
+        
         self.pipe = pipeline(
-            "text-generation" if not "t5" in model_name.lower() else "text2text-generation",
+            task,
             model=self.model,
             tokenizer=self.tokenizer,
             device=self.device
