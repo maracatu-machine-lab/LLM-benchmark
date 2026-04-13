@@ -28,11 +28,10 @@ class HuggingFaceLLM(BaseLLM):
             device=self.device
         )
 
-    def generate(self, prompt: str, max_tokens: int = 200) -> str:
+    def generate(self, prompt: str, max_tokens: int = 600) -> str:
         config = GenerationConfig(
             max_new_tokens=max_tokens,
-            temperature=0.7,
-            do_sample=True
+            do_sample=False
         )
 
         output = self.pipe(prompt, generation_config=config)
