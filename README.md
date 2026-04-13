@@ -39,7 +39,7 @@ venv\Scripts\activate
 # Instalar dependências
 pip install -r requirements.txt
 
-# Alterar a variável "hf_token" no arquivo factory.py, com o token gerado anteriormente
+# Criar cópia do ".env.example" e renomear para ".env", alterando a variável "HF_TOKEN" com o valor do token gerado anteriormente
 
 # Executar o código
 python main.py
