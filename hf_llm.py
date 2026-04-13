@@ -28,7 +28,7 @@ class HuggingFaceLLM(BaseLLM):
             device=self.device
         )
 
-    def generate(self, prompt: str, max_tokens: int = 200) -> str:
+    def generate(self, prompt: str, max_tokens: int = 600) -> str:
         config = GenerationConfig(
             max_new_tokens=max_tokens,
             do_sample=False
