@@ -30,15 +30,8 @@ def obter_resposta_do_modelo(llm, prompt, timeout_in_seconds=settings.timeout_in
         future = executor.submit(llm.generate, prompt)
         try:
             return future.result(timeout=timeout_in_seconds)
-        except concurrent.futures.TimeoutError:fazer_perguntas(
-            config["lista"],
-            config["titulo"],
-            config["complemento"],
-            config["id"],
-            llm,
-            nome_modelo
-        )
-        return "TEMPO_LIMITE_EXCEDIDO"
+        except concurrent.futures.TimeoutError:
+            return "TEMPO_LIMITE_EXCEDIDO"
 
 def fazer_perguntas(array_perguntas, texto_titulo_pergunta, complemento_pergunta, texto_id_pergunta, llm, nome_modelo):
   for indice_pergunta, pergunta in enumerate(array_perguntas):
