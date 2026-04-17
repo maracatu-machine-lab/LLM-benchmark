@@ -4,7 +4,9 @@ from colorama import Fore
 import concurrent.futures
 
 from factory import carregar_modelo
-from perguntas import configuracoes_perguntas
+#from perguntas import configuracoes_perguntas
+from gerenciador_perguntas import GerenciadorPerguntas
+from pergunta import Pergunta
 from graficos import gerar_graficos
 from factory import MODELOS_DISPONIVEIS
 from propriedades_configuracao import settings
@@ -63,6 +65,25 @@ def fazer_perguntas(array_perguntas, texto_titulo_pergunta, complemento_pergunta
         avaliacao_arr.append("")
 
 
+gerenciador = GerenciadorPerguntas()
+
+for nome_modelo in MODELOS:
+    llm = carregar_modelo(nome_modelo)
+    
+    for config in gerenciador.obter_configuracoes():
+        
+        lista_perguntas = gerenciador.carregar_lista(config["idioma"], config["categoria"])
+        
+        fazer_perguntas(
+            lista_perguntas,
+            config["titulo"],
+            config["comp"],
+            config["id"],
+            llm,
+            nome_modelo
+        )
+
+'''
 # -------------
 # FAZER PERGUNTAS
 for nome_modelo in MODELOS:
@@ -76,7 +97,8 @@ for nome_modelo in MODELOS:
             llm,
             nome_modelo
         )
-
+'''
+        
 # -------------
 # CRIAÇÃO DO ARQUIVO CSV
 
