@@ -6,6 +6,7 @@ MODELOS_DISPONIVEIS = {
     "gemma-br": "CEIA-UFG/Gemma-3-Gaia-PT-BR-4b-it",
     "phi-4-mini": "microsoft/Phi-4-mini-instruct",
     "qwen-3.5": "techwithsergiu/Qwen3.5-text-4B",
+    "qwen2.5-1.5b": "Qwen/Qwen2.5-1.5B-Instruct", 
 }
 
 def carregar_modelo(nome: str):
