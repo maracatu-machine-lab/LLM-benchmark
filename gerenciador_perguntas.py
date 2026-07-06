@@ -16,9 +16,9 @@ class GerenciadorPerguntas:
             {"idioma": "en", "categoria": "novas", "titulo": "Pergunta nova - Inglês", "comp": " Give only your final answer.", "id": "NOVA_ING_"},
             {"idioma": "pt", "categoria": "novas", "titulo": "Pergunta nova - Português", "comp": " Dê apenas sua resposta final.", "id": "NOVA_POR_"},
             {"idioma": "es", "categoria": "novas", "titulo": "Pergunta nova - Espanhol", "comp": " Dame solo tu respuesta final.", "id": "NOVA_ESP_"},
-            {"idioma": "en", "categoria": "novas_ex", "titulo": "Pergunta nova com exemplo - Inglês", "comp": " Give only your final answer.", "id": "NOVA_EX_ING_"},
-            {"idioma": "pt", "categoria": "novas_ex", "titulo": "Pergunta nova com exemplo - Português", "comp": " Dê apenas sua resposta final.", "id": "NOVA_EX_POR_"},
-            {"idioma": "es", "categoria": "novas_ex", "titulo": "Pergunta nova com exemplo - Espanhol", "comp": " Dame solo tu respuesta final.", "id": "NOVA_EX_ESP_"},
+             {"idioma": "en", "categoria": "originais_ruidos_ingles", "titulo": "Pergunta original com ruído - Inglês", "comp": " Give only your final answer.", "id": "ORIG_RUIDO_ING_"},
+             {"idioma": "pt", "categoria": "originais_ruidos_portugues", "titulo": "Pergunta original com ruído - Português", "comp": " Dê apenas sua resposta final.", "id": "ORIG_RUIDO_POR_"},
+             {"idioma": "es", "categoria": "originais_ruidos_espanhol", "titulo": "Pergunta original com ruído - Espanhol", "comp": " Dame solo tu respuesta final.", "id": "ORIG_RUIDO_ESP_"},
         ]
 
     def obter_configuracoes(self):
