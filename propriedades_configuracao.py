@@ -9,7 +9,7 @@ class Settings(BaseSettings):
 
     @field_validator("hf_token")
     def validar_token(cls, v):
-        if "" in v:
+        if "SEU-TOKEN-AQUI" in v:
             raise ValueError("Você precisa configurar seu HF_TOKEN no .env")
         return v
 
