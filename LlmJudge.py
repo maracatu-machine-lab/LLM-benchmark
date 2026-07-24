@@ -46,13 +46,9 @@ class LLMJudge:
                - Classify as "unanswered" if no explicit final answer is present
                  (per rule 3).
 
-            5. Quote the exact substring of candidate_response you used as evidence for
-               final_answer. If classification is "unanswered", leave evidence as "".
-            
             Return ONLY valid JSON in the following format, nothing else:
             {{
                 "final_answer": "...",
-                "evidence": "...",
                 "classification": "correct|intuitive|other|unanswered"
             }}
             """

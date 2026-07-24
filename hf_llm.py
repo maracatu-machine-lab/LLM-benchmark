@@ -36,10 +36,14 @@ class HuggingFaceLLM(BaseLLM):
         )
 
     def generate(self, prompt: str, max_tokens: int = 100) -> str:
+        messages = [{"role": "user", "content": prompt}]
+
         output = self.pipe(
-            prompt,
+            messages,                    # lista de mensagens, não string
             max_new_tokens=max_tokens,
             do_sample=False,
-            return_full_text=False
+            repetition_penalty=1.15,     # ajuda a evitar loop mesmo com greedy
+            return_full_text=False,
+            pad_token_id=self.tokenizer.eos_token_id,
         )
         return output[0]["generated_text"]
